@@ -1,0 +1,93 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_testu_name": {
+            "defaultValue": "testu",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('workflows_testu_name')]",
+            "location": "eastus",
+            "identity": {
+                "principalId": "aeb38f2b-5959-47c8-909e-8e1c1e861ce2",
+                "tenantId": "a225a19c-d729-4eb9-86bb-292de648956c",
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "schema": {
+                                    "items": {
+                                        "properties": {
+                                            "OrderId": {
+                                                "type": "string"
+                                            },
+                                            "Price": {
+                                                "type": "string"
+                                            },
+                                            "Product": {
+                                                "type": "string"
+                                            },
+                                            "Quantity": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "OrderId",
+                                            "Product",
+                                            "Quantity",
+                                            "Price"
+                                        ],
+                                        "type": "object"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                        "Filter_array": {
+                            "runAfter": {
+                                "Select": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Query",
+                            "inputs": {
+                                "from": "@body('Select')",
+                                "where": "@greater(int(item()['Order_Id']), 2)"
+                            }
+                        },
+                        "Select": {
+                            "runAfter": {},
+                            "type": "Select",
+                            "inputs": {
+                                "from": "@triggerBody()",
+                                "select": {
+                                    "Order_Id": "@item()['OrderId']",
+                                    "ProductName": "@item()['Product']"
+                                }
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {}
+            }
+        }
+    ]
+}
